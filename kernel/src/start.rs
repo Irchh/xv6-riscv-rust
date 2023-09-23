@@ -5,6 +5,12 @@ global_asm!(include_str!("asm/entry.S"));
 
 #[no_mangle]
 static mut STACK0: [u8; 4096*NCPU] = [0; 4096*NCPU];
+// Needed for easy storage of thread specific data, like the hart id.
+#[no_mangle]
+static mut THREAD_LOCAL_STORAGE: [u8; 4096*NCPU] = [0; 4096*NCPU];
+
+#[thread_local]
+pub static mut CPUID: usize = 0;
 
 #[no_mangle]
 extern "C" fn rust_start() -> ! {
@@ -37,12 +43,7 @@ extern "C" fn rust_start() -> ! {
 
     // keep each CPU's hartid in its tp register, for cpuid().
     let id = riscv::register::mhartid::read();
-    unsafe {
-        asm!(
-        "mv {0}, tp",
-        in(reg) id
-        );
-    }
+    unsafe { CPUID = id; }
 
     // switch to supervisor mode and jump to main().
     unsafe {

@@ -15,6 +15,13 @@ _entry:
         addi a1, a1, 1
         mul a0, a0, a1
         add sp, sp, a0
+        # set up thread local storage
+        la a0, THREAD_LOCAL_STORAGE
+        li a1, 4096
+        csrr a2, mhartid
+        mul a1, a1, a2
+        add a0, a0, a1
+        add tp, zero, a0
         # jump to rust_start() in main.rs
         call rust_start
 spin:

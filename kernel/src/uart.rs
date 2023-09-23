@@ -1,20 +1,21 @@
+#![allow(dead_code)]
 const UART0: usize = 0x10000000;
 
 const RHR: usize = 0;            // receive holding register (for input bytes)
 const THR: usize = 0;            // transmit holding register (for output bytes)
 const IER: usize = 1;            // interrupt enable register
-const IER_RX_ENABLE: u8 = (1<<0);
-const IER_TX_ENABLE: u8 = (1<<1);
+const IER_RX_ENABLE: u8 = 1<<0;
+const IER_TX_ENABLE: u8 = 1<<1;
 const FCR: usize = 2;            // FIFO control register
-const FCR_FIFO_ENABLE: u8 = (1<<0);
-const FCR_FIFO_CLEAR: u8 = (3<<1); // clear the content of the two FIFOs
+const FCR_FIFO_ENABLE: u8 = 1<<0;
+const FCR_FIFO_CLEAR: u8 = 3<<1; // clear the content of the two FIFOs
 const ISR: usize = 2;            // interrupt status register
 const LCR: usize = 3;            // line control register
-const LCR_EIGHT_BITS: u8 = (3<<0);
-const LCR_BAUD_LATCH: u8 = (1<<7); // special mode to set baud rate
+const LCR_EIGHT_BITS: u8 = 3<<0;
+const LCR_BAUD_LATCH: u8 = 1<<7; // special mode to set baud rate
 const LSR: usize = 5;            // line status register
-const LSR_RX_READY: usize = (1<<0);   // input is waiting to be read from RHR
-const LSR_TX_IDLE: usize = (1<<5);    // THR can accept another character to send
+const LSR_RX_READY: usize = 1<<0;   // input is waiting to be read from RHR
+const LSR_TX_IDLE: usize = 1<<5;    // THR can accept another character to send
 
 pub fn uart_init() {
     // disable interrupts.
