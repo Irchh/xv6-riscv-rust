@@ -27,6 +27,8 @@ extern "C" fn rust_main() -> ! {
     }
     let id = cpuid() as u8;
     loop {
-        uart::write_uart_reg(0, '0' as u8 + id);
+        unsafe {
+            uart::UART.lock().write_reg(0, b'0' + id)
+        }
     }
 }

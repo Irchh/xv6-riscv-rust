@@ -1,4 +1,7 @@
 #![allow(dead_code)]
+
+use spin::Mutex;
+
 const UART0: usize = 0x10000000;
 
 const RHR: usize = 0;            // receive holding register (for input bytes)
@@ -17,40 +20,52 @@ const LSR: usize = 5;            // line status register
 const LSR_RX_READY: usize = 1<<0;   // input is waiting to be read from RHR
 const LSR_TX_IDLE: usize = 1<<5;    // THR can accept another character to send
 
-pub fn uart_init() {
-    // disable interrupts.
-    write_uart_reg(IER, 0x00);
+pub static UART: Mutex<Uart> = Mutex::new(Uart::new());
 
-    // special mode to set baud rate.
-    write_uart_reg(LCR, LCR_BAUD_LATCH);
+pub struct Uart {}
 
-    // LSB for baud rate of 38.4K.
-    write_uart_reg(0, 0x03);
+impl Uart {
+    pub const fn new() -> Self {
+        Uart {}
+    }
 
-    // MSB for baud rate of 38.4K.
-    write_uart_reg(1, 0x00);
+    pub unsafe fn init(&self) {
+        // disable interrupts.
+        self.write_reg(IER, 0x00);
 
-    // leave set-baud mode,
-    // and set word length to 8 bits, no parity.
-    write_uart_reg(LCR, LCR_EIGHT_BITS);
+        // special mode to set baud rate.
+        self.write_reg(LCR, LCR_BAUD_LATCH);
 
-    // reset and enable FIFOs.
-    write_uart_reg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
+        // LSB for baud rate of 38.4K.
+        self.write_reg(0, 0x03);
 
-    // enable transmit and receive interrupts.
-    write_uart_reg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
-}
+        // MSB for baud rate of 38.4K.
+        self.write_reg(1, 0x00);
 
-pub fn write_uart_reg(reg: usize, value: u8) {
-    let addr = (UART0 + reg) as *mut u8;
-    unsafe {
+        // leave set-baud mode,
+        // and set word length to 8 bits, no parity.
+        self.write_reg(LCR, LCR_EIGHT_BITS);
+
+        // reset and enable FIFOs.
+        self.write_reg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
+
+        // enable transmit and receive interrupts.
+        self.write_reg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
+    }
+
+    pub unsafe fn write_reg(&self, reg: usize, value: u8) {
+        let addr = (UART0 + reg) as *mut u8;
         addr.write(value);
+    }
+
+    unsafe fn read_reg(&self, reg: usize) -> u8 {
+        let addr = (UART0 + reg) as *mut u8;
+        addr.read()
     }
 }
 
-fn read_uart_reg(reg: usize) -> u8 {
-    let addr = (UART0 + reg) as *mut u8;
+pub fn uart_init() {
     unsafe {
-        addr.read()
+        UART.lock().init()
     }
 }
