@@ -13,6 +13,7 @@ mod param;
 mod proc;
 mod start;
 mod uart;
+mod kprintln;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -25,10 +26,6 @@ extern "C" fn rust_main() -> ! {
     } else {
         while STARTED.load(Ordering::Relaxed) == false {}
     }
-    let id = cpuid() as u8;
-    loop {
-        unsafe {
-            uart::UART.lock().write_reg(0, b'0' + id)
-        }
-    }
+    kprintln!("Hello from hart {}", cpuid());
+    loop {}
 }
