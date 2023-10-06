@@ -14,6 +14,8 @@ mod proc;
 mod start;
 mod uart;
 mod kprintln;
+mod kalloc;
+mod memlayout;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -21,11 +23,13 @@ static STARTED: AtomicBool = AtomicBool::new(false);
 extern "C" fn rust_main() -> ! {
     if cpuid() == 0 {
         uart::uart_init();
+        kprintln!("xv6 kernel is booting");
+        unsafe { kalloc::KMEM.lock().init() }   // Physical page allocator
 
         STARTED.store(true, Ordering::Relaxed)
     } else {
         while STARTED.load(Ordering::Relaxed) == false {}
+        kprintln!("Hello from hart {}", cpuid());
     }
-    kprintln!("Hello from hart {}", cpuid());
     loop {}
 }

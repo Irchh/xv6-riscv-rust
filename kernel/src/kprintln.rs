@@ -1,5 +1,4 @@
 use core::fmt;
-use core::fmt::Write;
 use crate::uart;
 #[macro_export]
 macro_rules! kprint {
