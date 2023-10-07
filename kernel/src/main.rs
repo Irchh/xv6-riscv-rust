@@ -16,6 +16,9 @@ mod uart;
 mod kprintln;
 mod kalloc;
 mod memlayout;
+mod vm;
+mod util;
+mod riscv_defs;
 
 static STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -25,7 +28,8 @@ extern "C" fn rust_main() -> ! {
         uart::uart_init();
         kprintln!("xv6 kernel is booting");
         unsafe { kalloc::KMEM.lock().init() }   // Physical page allocator
-
+        vm::KVM.lock().init();                  // Create kernel page table
+        //vm::KVM.lock().init_hart();             // Turn on paging
         STARTED.store(true, Ordering::Relaxed)
     } else {
         while STARTED.load(Ordering::Relaxed) == false {}

@@ -2,7 +2,7 @@ use core::ops::{BitAnd, Not};
 use spin::Mutex;
 use crate::kprintln;
 use crate::memlayout::PHYSTOP;
-use crate::param::PGSIZE;
+use crate::riscv_defs::PGSIZE;
 
 extern "C" {
     static end: u8; // First address after kernel, defined by linker.ld.
@@ -56,14 +56,17 @@ impl KernelMem {
     /// Allocate one 4096-byte page of physical memory.
     /// Returns a pointer that the kernel can use.
     /// Returns 0 if the memory cannot be allocated.
-    pub unsafe fn alloc(&mut self) -> *const u8 {
+    pub fn alloc(&mut self) -> *mut u8 {
         let r = self.freelist;
         if !r.is_null() {
-            self.freelist = r.read().next;
-            r.write_bytes(5, PGSIZE);
+            // SAFETY: r is not null.
+            unsafe {
+                self.freelist = r.read().next;
+                r.write_bytes(5, PGSIZE);
+            }
         }
 
-        r as *const u8
+        r as *mut u8
     }
 
     fn round_up(a: usize) -> usize {
