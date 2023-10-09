@@ -26,6 +26,9 @@
 build:
 	cargo build
 
+build-release:
+	cargo build --release
+
 fmt:
 	cargo fmt
 
@@ -38,6 +41,14 @@ qemu: build
     -nographic \
     -bios none \
     -kernel target/riscv64gc-unknown-none-elf/debug/kernel \
+    -smp 8
+
+qemu-release: build-release
+	qemu-system-riscv64 \
+    -machine virt \
+    -nographic \
+    -bios none \
+    -kernel target/riscv64gc-unknown-none-elf/release/kernel \
     -smp 8
 
 qemu-gdb: build
